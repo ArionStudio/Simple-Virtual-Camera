@@ -44,6 +44,7 @@ class Renderer:
     # Mouse sensitivity (degrees per pixel)
     self.mouseSensitivityX = 2  # Yaw sensitivity
     self.mouseSensitivityY = 2  # Pitch sensitivity
+    self.rollSensitivity = 2  # Speed for Z-axis movement with middle mouse button
     
     # Movement speed
     self.moveSpeed = 10.0  # Units per second
@@ -93,8 +94,8 @@ class Renderer:
     if keys[pygame.K_d]: self.movement[0] += 1.0  # Right is positive X
     
     # Up/Down (Y axis)
-    if keys[pygame.K_SPACE]: self.movement[1] += 1.0  # Up is positive Y
-    if keys[pygame.K_LSHIFT]: self.movement[1] -= 1.0  # Down is negative Y
+    if keys[pygame.K_LSHIFT]: self.movement[1] += 1.0  # Up is positive Y
+    if keys[pygame.K_LCTRL]: self.movement[1] -= 1.0   # Down is negative Y
     
     # Normalize movement vector if not zero
     length = np.linalg.norm(self.movement)
@@ -112,7 +113,7 @@ class Renderer:
     return False
 
   def handleMouseLook(self):
-    """Handle mouse looking"""
+    """Handle mouse looking and roll rotation with middle mouse button"""
     # Get relative mouse movement
     dx, dy = pygame.mouse.get_rel()
     
@@ -120,14 +121,18 @@ class Renderer:
         # Get delta time for smooth movement
         dt = self.clock.get_time() / 1000.0  # Convert to seconds
         
-        # Convert to rotation angles (degrees)
-        # Multiply by sensitivity and delta time
-        yaw = dx * self.mouseSensitivityX * dt
-        pitch = dy * self.mouseSensitivityY * dt
-        
-        # Rotate camera (negative pitch because mouse Y is inverted)
-        self.camera.rotate((-pitch, -yaw, 0))
-        return True
+        # Check if middle mouse button is pressed
+        if pygame.mouse.get_pressed()[1]:  # Middle button
+            # Use horizontal mouse movement for Z rotation (roll)
+            roll = dx * self.rollSensitivity * dt
+            self.camera.rotate((0, 0, -roll))  # Negative for natural roll direction
+            return True
+        else:
+            # Normal camera rotation (pitch and yaw)
+            yaw = dx * self.mouseSensitivityX * dt
+            pitch = dy * self.mouseSensitivityY * dt
+            self.camera.rotate((-pitch, -yaw, 0))
+            return True
         
     return False
 
