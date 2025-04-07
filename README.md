@@ -37,7 +37,7 @@ Implementacja w Pythonie systemu wirtualnej kamery, umożliwiającego użytkowni
 1. Sklonuj repozytorium
 2. Zainstaluj wymagane zależności:
    ```bash
-   pip install numpy PyOpenGL
+   pip install numpy pygame
    ```
 3. Skonfiguruj zmienne środowiskowe jeśli potrzebne
 

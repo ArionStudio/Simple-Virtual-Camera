@@ -1,0 +1,127 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{Sprawozdanie – System Wirtualnej Kamery}
+\author{Adrian Rybaczuk 318483}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Wstęp}
+
+Projekt polega na implementacji systemu wirtualnej kamery. Celem jest przedstawienie sceny przy pomocy wirtualnej kamery. Użyłem do tego podejścia z wykorzystaniem 2 układów, układu kamery oraz układu sceny.
+
+\section{Transformacja obiektu 3D}
+
+W tej sekcji przedstawiamy szczegółowy opis procesu przekształcania obiektu 3D z jego pierwotnego umiejscowienia w scenie do ostatecznego obrazu na ekranie. Wszystkie operacje wykonujemy w przestrzeni jednorodnej (homogenicznej), co umożliwia łączenie transformacji translacji, rotacji oraz skalowania w jedną macierz.
+
+\subsection{Krok 1: Umiejscowienie Obiektu na Scenie (Modeling)}
+Obiekt w scenie jest pierwotnie opisany w swoim lokalnym układzie współrzędnych. Aby umiejscowić go w przestrzeni świata, stosujemy modelową macierz transformacji \( M \),
+\[
+M = T \cdot R \cdot S,
+\]
+gdzie:
+\begin{itemize}
+    \item \( T \) – macierz translacji,
+    \item \( R \) – macierz rotacji,
+    \item \( S \) – macierz skalowania.
+\end{itemize}
+Wszystkie współrzędne obiektu zapisujemy jako wektory jednorodne:
+\[
+P_{model} = \begin{bmatrix} x \\ y \\ z \\ 1 \end{bmatrix}.
+\]
+W wyniku przekształcenia mamy:
+\[
+P_{world} = M \cdot P_{model}.
+\]
+
+\subsection{Krok 2: Przelozenie Obiektu z Widoku Sceny na Widok Kamery (View Transformation)}
+Następnie, aby przejść z układu świata (sceny) do układu kamery, stosujemy macierz widoku \( V \). Jest ona konstruowana na bazie pozycji kamery \( E \) (ang. eye), punktu, na który kamera patrzy, oraz wektorów definiujących orientację kamery.
+Metoda \texttt{lookAt} definiuje trzy ortonormalne wektory:
+\begin{itemize}
+    \item \( \mathbf{u} \) – wektor określający prawą stronę kamery,
+    \item \( \mathbf{v} \) – wektor skierowany do góry,
+    \item \( \mathbf{n} \) – wektor przeciwległy do kierunku patrzenia.
+\end{itemize}
+Macierz widoku ma postać:
+\[
+V = \begin{bmatrix}
+u_x & u_y & u_z & -\mathbf{u} \cdot E \\
+v_x & v_y & v_z & -\mathbf{v} \cdot E \\
+n_x & n_y & n_z & -\mathbf{n} \cdot E \\
+0   & 0   & 0   & 1 
+\end{bmatrix}.
+\]
+Przekształcenie do układu kamery wykonujemy jako:
+\[
+P_{camera} = V \cdot P_{world}.
+\]
+
+\subsection{Krok 3: Przelozenie Obiektu z Widoku Kamery na Widok 2D (Rzutowanie Perspektywiczne)}
+Aby odwzorować trójwymiarowy widok kamery na dwuwymiarowy obraz, stosujemy macierz rzutowania \( P \) korzystającą z zasad perspektywicznego rzutowania.
+Nowe współrzędne \((x', y', z', w')\) są obliczane jako:
+\[
+P' = P \cdot P_{camera}.
+\]
+Następnie wykonujemy perspektywiczne dzielenie przez \( w' \):
+\[
+(x_{ndc}, y_{ndc}, z_{ndc}) = \left(\frac{x'}{w'}, \frac{y'}{w'}, \frac{z'}{w'}\right),
+\]
+gdzie \( (x_{ndc}, y_{ndc}, z_{ndc}) \) to współrzędne w przestrzeni znormalizowanej (ND). Macierz perspektywiczna \( P \) może mieć postać:
+\[
+P = \begin{bmatrix}
+\frac{f}{a} & 0       & 0                & 0 \\
+0       & f       & 0                & 0 \\
+0       & 0       & \frac{N+F}{N-F}  & \frac{2NF}{N-F} \\
+0       & 0       & -1               & 0 
+\end{bmatrix},
+\]
+gdzie:
+\begin{itemize}
+    \item \( f = \frac{1}{\tan(\theta/2)} \) – zależny od kąta widzenia \( \theta \),
+    \item \( a \) – współczynnik proporcji ekranu,
+    \item \( N \) i \( F \) – odległości do płaszczyzny bliskiej (near) i dalszej (far).
+\end{itemize}
+
+\subsection{Krok 4: Przelozenie Obiektu na Viewport (Viewport Transformation)}
+Ostatecznie, współrzędne z przestrzeni znormalizowanej, gdzie \( x_{ndc}, y_{ndc} \in [-1,1] \), są mapowane do rzeczywistych współrzędnych ekranu.
+Dla ekranu o szerokości \( W \) i wysokości \( H \) stosujemy następujące przekształcenie:
+\[
+x_{screen} = \frac{W}{2} \left( x_{ndc} + 1 \right), \quad y_{screen} = \frac{H}{2} \left( 1 - y_{ndc} \right).
+\]
+Zapewnia to, że punkt \((-1,-1)\) trafia do lewego dolnego rogu ekranu, a \((1,1)\) do prawego górnego.
+
+\bigskip
+
+Każdy z tych kroków wykorzystuje macierze 4x4 oraz operacje w przestrzeni jednorodnej, co pozwala na efektywne łączenie transformacji oraz zapewnia spójność obliczeń podczas renderowania scen 3D. Metody te stanowią fundament nowoczesnych algorytmów renderowania w grafice komputerowej.
+
+\section{Podsumowanie Matematyczne}
+
+System wirtualnej kamery opiera się na fundamentalnych zasadach algebry liniowej:
+\begin{itemize}
+    \item \textbf{Homogeniczne współrzędne:} Pozwalają na łączenie różnych transformacji (translacji, rotacji, skalowania) w jedną operację.
+    \item \textbf{Macierze transformacji:} Umożliwiają precyzyjne operacje na punktach poprzez mnożenie macierzy.
+    \item \textbf{Twierdzenie Eulera:} Każdy obrót w przestrzeni można sprowadzić do pojedynczego obrotu wokół ustalonej osi, co upraszcza modelowanie ruchu kamery.
+    \item \textbf{Rzutowanie perspektywiczne:} Dzielenie przez \(w\) oraz przekształcenie do układu widoku umożliwiają realistyczną projekcję 3D na 2D.
+\end{itemize}
+
+\section{Literatura i Źródła}
+\begin{enumerate}
+    \item Foley, J. D., van Dam, A., Feiner, S. K., \& Hughes, J. F. (1990). \textit{Computer Graphics: Principles and Practice} (2nd ed.). Addison-Wesley.
+    \item Takahashi, S. (2006). \textit{The Manga Guide to Linear Algebra}. No Starch Press.
+    \item Lengyel, E. (2004). \textit{Mathematics for Game Programming and Computer Graphics}. CRC Press.
+    \item Shirley, P., Marschner, S. (2013). \textit{Fundamentals of Computer Graphics} (4th ed.). A K Peters/CRC Press.
+    \item \href{https://www.pygame.org/docs/}{Pygame Documentation}.
+    \item \href{https://numpy.org/doc/}{NumPy Documentation}.
+\end{enumerate}
+
+\end{document}
