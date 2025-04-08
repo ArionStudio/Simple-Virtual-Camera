@@ -51,16 +51,21 @@ Implementacja w Pythonie systemu wirtualnej kamery, umożliwiającego użytkowni
 
 ## Sterowanie Kamerą
 
-- **Translacja**:
-  - Oś X: Ruch w lewo/prawo
-  - Oś Y: Ruch w górę/dół
-  - Oś Z: Ruch w przód/tył
-- **Rotacja**:
-  - Obrót wokół osi X
-  - Obrót wokół osi Y
-  - Obrót wokół osi Z
+- **Translacja** (klawiatura):
+  - W/S: Ruch w przód/tył (oś Z)
+  - A/D: Ruch w lewo/prawo (oś X)
+  - Shift/Ctrl: Ruch w górę/dół (oś Y)
+
+- **Rotacja** (mysz):
+  - Lewy przycisk myszy + ruch: Obrót wokół osi X (pitch) i Y (yaw)
+  - Środkowy przycisk myszy + ruch: Obrót wokół osi Z (roll)
+
 - **Widok**:
-  - Dostosowanie pola widzenia/zoom
+  - Kółko myszy: Zoom in/out (zmiana pola widzenia)
+  - +/-: Zoom in/out (zmiana pola widzenia)
+  - R: Reset kamery do pozycji początkowej
+  - E: Stabilizacja kamery (wyprostowanie)
+  - ESC: Wyjście z aplikacji
 
 ## Struktura Projektu
 

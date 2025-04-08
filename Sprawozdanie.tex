@@ -114,6 +114,34 @@ System wirtualnej kamery opiera się na fundamentalnych zasadach algebry liniowe
     \item \textbf{Rzutowanie perspektywiczne:} Dzielenie przez \(w\) oraz przekształcenie do układu widoku umożliwiają realistyczną projekcję 3D na 2D.
 \end{itemize}
 
+\section{Sterowanie Kamerą}
+
+System wirtualnej kamery oferuje intuicyjne sterowanie poprzez kombinację klawiatury i myszy, umożliwiając pełną kontrolę nad sześcioma stopniami swobody kamery:
+
+\subsection{Translacja (Przesunięcie)}
+Translacja kamery w przestrzeni 3D jest realizowana za pomocą klawiszy:
+\begin{itemize}
+    \item \textbf{W/S} - przesunięcie w przód/tył (oś Z)
+    \item \textbf{A/D} - przesunięcie w lewo/prawo (oś X)
+    \item \textbf{Shift/Ctrl} - przesunięcie w górę/dół (oś Y)
+\end{itemize}
+
+\subsection{Rotacja (Obrót)}
+Rotacja kamery jest kontrolowana za pomocą myszy:
+\begin{itemize}
+    \item \textbf{Lewy przycisk myszy + ruch} - obrót wokół osi X (pitch) i Y (yaw)
+    \item \textbf{Środkowy przycisk myszy + ruch} - obrót wokół osi Z (roll)
+\end{itemize}
+
+\subsection{Dodatkowe Kontrolki}
+\begin{itemize}
+    \item \textbf{Kółko myszy} - zoom in/out (zmiana pola widzenia)
+    \item \textbf{+/-} - zoom in/out (zmiana pola widzenia)
+    \item \textbf{R} - reset kamery do pozycji początkowej
+    \item \textbf{E} - stabilizacja kamery (wyprostowanie)
+    \item \textbf{ESC} - wyjście z aplikacji
+\end{itemize}
+
 \section{Literatura i Źródła}
 \begin{enumerate}
     \item Foley, J. D., van Dam, A., Feiner, S. K., \& Hughes, J. F. (1990). \textit{Computer Graphics: Principles and Practice} (2nd ed.). Addison-Wesley.
