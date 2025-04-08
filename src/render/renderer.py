@@ -42,9 +42,9 @@ class Renderer:
     self.movement = np.array([0.0, 0.0, 0.0])
     
     # Mouse sensitivity (degrees per pixel)
-    self.mouseSensitivityX = 10  # Yaw sensitivity
-    self.mouseSensitivityY = 10  # Pitch sensitivity
-    self.rollSensitivity = 10  # Speed for Z-axis movement with middle mouse button
+    self.mouseSensitivityX = 45  # Yaw sensitivity in degrees per pixel
+    self.mouseSensitivityY = 45  # Pitch sensitivity in degrees per pixel
+    self.rollSensitivity = 45  # Roll sensitivity in degrees per second
     
     # Movement speed
     self.moveSpeed = 10.0  # Units per second
@@ -124,24 +124,34 @@ class Renderer:
     if keys[pygame.K_LALT] or keys[pygame.K_RALT]:
         # Z-axis rotation (roll) with left/right arrows
         if keys[pygame.K_LEFT]:
+            # Apply roll directly in degrees
             self.camera.rotateLocalMatrix((0, 0, self.rollSensitivity * dt))
             return True
         if keys[pygame.K_RIGHT]:
+            # Apply roll directly in degrees
             self.camera.rotateLocalMatrix((0, 0, -self.rollSensitivity * dt))
             return True
     else:
         # Normal rotation (pitch and yaw)
+        # Up/Down arrows control pitch (X-axis rotation)
+        # Left/Right arrows control yaw (Y-axis rotation)
         if keys[pygame.K_UP]:
-            self.camera.rotateLocalMatrix((self.rotationSensitivity * dt, 0, 0))
+            # Apply pitch directly in degrees
+            self.camera.rotateLocalMatrix((self.rollSensitivity * dt, 0, 0))
             return True
         if keys[pygame.K_DOWN]:
-            self.camera.rotateLocalMatrix((-self.rotationSensitivity * dt, 0, 0))
+            # Apply pitch directly in degrees
+            self.camera.rotateLocalMatrix((-self.rollSensitivity * dt, 0, 0))
             return True
         if keys[pygame.K_LEFT]:
-            self.camera.rotateLocalMatrix((0, -self.rotationSensitivity * dt, 0))
+            # Apply yaw directly in degrees - INVERTED for intuitive control
+            # Left arrow should turn camera left (positive yaw)
+            self.camera.rotateLocalMatrix((0, self.rollSensitivity * dt, 0))
             return True
         if keys[pygame.K_RIGHT]:
-            self.camera.rotateLocalMatrix((0, self.rotationSensitivity * dt, 0))
+            # Apply yaw directly in degrees - INVERTED for intuitive control
+            # Right arrow should turn camera right (negative yaw)
+            self.camera.rotateLocalMatrix((0, -self.rollSensitivity * dt, 0))
             return True
     
     return False
@@ -169,6 +179,7 @@ class Renderer:
             # Get delta time for smooth movement
             dt = self.clock.get_time() / 1000.0  # Convert to seconds
             # Use horizontal mouse movement for Z rotation (roll)
+            # Apply roll directly in degrees
             roll = dx * self.rollSensitivity * dt
             self.camera.rotateLocalMatrix((0, 0, -roll))  # Negative for natural roll direction
             return True
@@ -190,9 +201,13 @@ class Renderer:
             # Get delta time for smooth movement
             dt = self.clock.get_time() / 1000.0  # Convert to seconds
             # Normal camera rotation (pitch and yaw)
-            yaw = dx * self.mouseSensitivityX * dt
-            pitch = dy * self.mouseSensitivityY * dt
-            self.camera.rotateLocalMatrix((-pitch, -yaw, 0))
+            # Invert X for natural mouse movement (left = look left)
+            # Apply yaw directly in degrees
+            yaw = -dx * self.mouseSensitivityX * dt
+            # Invert Y for natural mouse movement (up = look up)
+            # Apply pitch directly in degrees
+            pitch = -dy * self.mouseSensitivityY * dt
+            self.camera.rotateLocalMatrix((pitch, yaw, 0))
             return True
     else:
         # Reset last position when no mouse button is pressed

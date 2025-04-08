@@ -104,6 +104,106 @@ Zapewnia to, że punkt \((-1,-1)\) trafia do lewego dolnego rogu ekranu, a \((1,
 
 Każdy z tych kroków wykorzystuje macierze 4x4 oraz operacje w przestrzeni jednorodnej, co pozwala na efektywne łączenie transformacji oraz zapewnia spójność obliczeń podczas renderowania scen 3D. Metody te stanowią fundament nowoczesnych algorytmów renderowania w grafice komputerowej.
 
+\section{Sterowanie kamera w ukladzie 3D}
+
+Implementacja sterowania kamerą w układzie 3D opiera się na matematycznym modelu transformacji w przestrzeni jednorodnej. W systemie wirtualnej kamery zaimplementowano dwa główne typy ruchu: translację (przesunięcie) oraz rotację (obrót), które są realizowane za pomocą odpowiednich macierzy transformacji.
+
+\subsection{Translacja kamery}
+
+Translacja kamery jest realizowana w lokalnym układzie współrzędnych kamery, co zapewnia intuicyjne sterowanie niezależnie od aktualnej orientacji kamery. Wektor translacji \( \mathbf{t} = [t_x, t_y, t_z] \) jest przekształcany do globalnego układu współrzędnych za pomocą macierzy rotacji kamery.
+
+Dla kamery zorientowanej pod kątem \( \theta_x \) (pitch) i \( \theta_y \) (yaw), wektory kierunkowe w lokalnym układzie kamery są zdefiniowane jako:
+
+\begin{align*}
+\mathbf{forward} &= \begin{bmatrix} -\sin(\theta_y) \cos(\theta_x) \\ \sin(\theta_x) \\ -\cos(\theta_y) \cos(\theta_x) \end{bmatrix} \\
+\mathbf{right} &= \begin{bmatrix} \cos(\theta_y) \\ 0 \\ -\sin(\theta_y) \end{bmatrix} \\
+\mathbf{up} &= \mathbf{right} \times \mathbf{forward}
+\end{align*}
+
+Translacja w lokalnym układzie kamery jest realizowana jako kombinacja liniowa tych wektorów:
+
+\[
+\mathbf{movement} = \mathbf{right} \cdot t_x + \mathbf{up} \cdot t_y + \mathbf{forward} \cdot t_z
+\]
+
+Nowa pozycja kamery \( \mathbf{E}_{new} \) jest obliczana jako:
+
+\[
+\mathbf{E}_{new} = \mathbf{E}_{current} + \mathbf{movement}
+\]
+
+gdzie \( \mathbf{E}_{current} \) to aktualna pozycja kamery.
+
+\subsection{Rotacja kamery}
+
+Rotacja kamery jest realizowana za pomocą macierzy rotacji wokół lokalnych osi kamery. W systemie zaimplementowano trzy typy rotacji:
+
+\begin{itemize}
+    \item \textbf{Pitch} - obrót wokół lokalnej osi X (góra-dół)
+    \item \textbf{Yaw} - obrót wokół lokalnej osi Y (lewo-prawo)
+    \item \textbf{Roll} - obrót wokół lokalnej osi Z (przechylenie)
+\end{itemize}
+
+Macierze rotacji dla poszczególnych osi są zdefiniowane jako:
+
+\begin{align*}
+R_x(\theta) &= \begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & \cos(\theta) & -\sin(\theta) & 0 \\
+0 & \sin(\theta) & \cos(\theta) & 0 \\
+0 & 0 & 0 & 1
+\end{bmatrix} \\
+R_y(\theta) &= \begin{bmatrix}
+\cos(\theta) & 0 & \sin(\theta) & 0 \\
+0 & 1 & 0 & 0 \\
+-\sin(\theta) & 0 & \cos(\theta) & 0 \\
+0 & 0 & 0 & 1
+\end{bmatrix} \\
+R_z(\theta) &= \begin{bmatrix}
+\cos(\theta) & -\sin(\theta) & 0 & 0 \\
+\sin(\theta) & \cos(\theta) & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\end{align*}
+
+Kombinacja rotacji jest realizowana jako iloczyn macierzy w odpowiedniej kolejności. W systemie zaimplementowano kolejność: yaw \(\rightarrow\) pitch \(\rightarrow\) roll, co zapewnia stabilne i intuicyjne sterowanie:
+
+\[
+R_{combined} = R_z \cdot R_x \cdot R_y
+\]
+
+Nowa macierz kamery \( C_{new} \) jest obliczana jako:
+
+\[
+C_{new} = R_{combined} \cdot C_{current}
+\]
+
+gdzie \( C_{current} \) to aktualna macierz kamery.
+
+\subsection{Stabilizacja i ograniczenia}
+
+W systemie zaimplementowano mechanizmy stabilizacji i ograniczeń dla rotacji kamery:
+
+\begin{itemize}
+    \item \textbf{Normalizacja yaw} - kąt yaw jest normalizowany do zakresu \([0, 360^\circ)\)
+    \item \textbf{Stabilizacja} - funkcja stabilizacji zaokrągla kąty rotacji do najbliższych wartości 90-stopniowych, co ułatwia orientację w przestrzeni
+\end{itemize}
+
+\subsubsection{Problem gimbal lock}
+
+Gimbal lock (zawieszenie kardana) to zjawisko występujące w systemach rotacji 3D, w którym traci się jeden stopień swobody. W przypadku kamery, problem ten pojawia się, gdy dwie osie rotacji stają się równoległe, co prowadzi do utraty jednego stopnia swobody. W układzie kardanicznym (eulerowskim), gdy pitch zbliża się do \(\pm 90^\circ\), osie yaw i roll stają się równoległe, co uniemożliwia niezależną kontrolę tych rotacji.
+
+W systemie wirtualnej kamery zaimplementowano dwa podejścia do rozwiązania tego problemu:
+
+\begin{enumerate}
+    \item \textbf{Ograniczenie kąta pitch} - kąt pitch jest ograniczony do zakresu \([-179^\circ, 179^\circ]\), co zapobiega osiągnięciu dokładnie \(\pm 180^\circ\), gdzie występuje pełne zawieszenie kardana.
+    
+    \item \textbf{Kolejność rotacji} - rotacje są aplikowane w określonej kolejności (yaw \(\rightarrow\) pitch \(\rightarrow\) roll), co minimalizuje problem gimbal lock dla większości orientacji kamery.
+\end{enumerate}
+
+W obecnej implementacji, ograniczenie kąta pitch do zakresu \([-179^\circ, 179^\circ]\) zapewnia dobry kompromis między swobodą ruchu kamery a stabilnością systemu. Pozwala to na prawie pełny obrót kamery w pionie, jednocześnie unikając problemu gimbal lock.
+
 \section{Podsumowanie Matematyczne}
 
 System wirtualnej kamery opiera się na fundamentalnych zasadach algebry liniowej:
@@ -114,32 +214,69 @@ System wirtualnej kamery opiera się na fundamentalnych zasadach algebry liniowe
     \item \textbf{Rzutowanie perspektywiczne:} Dzielenie przez \(w\) oraz przekształcenie do układu widoku umożliwiają realistyczną projekcję 3D na 2D.
 \end{itemize}
 
-\section{Sterowanie Kamerą}
+\section{Mapowanie sterowania}
 
-System wirtualnej kamery oferuje intuicyjne sterowanie poprzez kombinację klawiatury i myszy, umożliwiając pełną kontrolę nad sześcioma stopniami swobody kamery:
+System wirtualnej kamery oferuje intuicyjne sterowanie poprzez kombinację klawiatury i myszy. Poniżej przedstawiono szczegółowe mapowanie kontroli:
 
-\subsection{Translacja (Przesunięcie)}
-Translacja kamery w przestrzeni 3D jest realizowana za pomocą klawiszy:
+\subsection{Sterowanie klawiaturą}
+
+\subsubsection{Translacja (Przesunięcie)}
 \begin{itemize}
-    \item \textbf{W/S} - przesunięcie w przód/tył (oś Z)
-    \item \textbf{A/D} - przesunięcie w lewo/prawo (oś X)
-    \item \textbf{Shift/Ctrl} - przesunięcie w górę/dół (oś Y)
+    \item \textbf{W} - przesunięcie w przód (oś Z)
+    \item \textbf{S} - przesunięcie w tył (oś Z)
+    \item \textbf{A} - przesunięcie w lewo (oś X)
+    \item \textbf{D} - przesunięcie w prawo (oś X)
+    \item \textbf{Shift} - przesunięcie w górę (oś Y)
+    \item \textbf{Ctrl} - przesunięcie w dół (oś Y)
 \end{itemize}
 
-\subsection{Rotacja (Obrót)}
-Rotacja kamery jest kontrolowana za pomocą myszy:
+\subsubsection{Rotacja (Obrót)}
 \begin{itemize}
-    \item \textbf{Lewy przycisk myszy + ruch} - obrót wokół osi X (pitch) i Y (yaw)
-    \item \textbf{Środkowy przycisk myszy + ruch} - obrót wokół osi Z (roll)
+    \item \textbf{Strzałka w górę} - obrót w górę (pitch)
+    \item \textbf{Strzałka w dół} - obrót w dół (pitch)
+    \item \textbf{Strzałka w lewo} - obrót w lewo (yaw)
+    \item \textbf{Strzałka w prawo} - obrót w prawo (yaw)
+    \item \textbf{Alt + Strzałka w lewo} - obrót w lewo (roll)
+    \item \textbf{Alt + Strzałka w prawo} - obrót w prawo (roll)
 \end{itemize}
 
-\subsection{Dodatkowe Kontrolki}
+\subsubsection{Dodatkowe kontrolki}
 \begin{itemize}
-    \item \textbf{Kółko myszy} - zoom in/out (zmiana pola widzenia)
-    \item \textbf{+/-} - zoom in/out (zmiana pola widzenia)
+    \item \textbf{+} - przybliżenie (zmniejszenie pola widzenia)
+    \item \textbf{-} - oddalenie (zwiększenie pola widzenia)
     \item \textbf{R} - reset kamery do pozycji początkowej
     \item \textbf{E} - stabilizacja kamery (wyprostowanie)
     \item \textbf{ESC} - wyjście z aplikacji
+\end{itemize}
+
+\subsection{Sterowanie myszą}
+
+\subsubsection{Rotacja (Obrót)}
+\begin{itemize}
+    \item \textbf{Lewy przycisk myszy + ruch} - obrót kamery w kierunku ruchu myszy
+    \begin{itemize}
+        \item Ruch w poziomie - obrót wokół osi Y (yaw)
+        \item Ruch w pionie - obrót wokół osi X (pitch)
+    \end{itemize}
+    \item \textbf{Środkowy przycisk myszy + ruch w poziomie} - obrót wokół osi Z (roll)
+\end{itemize}
+
+\subsubsection{Zoom}
+\begin{itemize}
+    \item \textbf{Kółko myszy w górę} - przybliżenie (zmniejszenie pola widzenia)
+    \item \textbf{Kółko myszy w dół} - oddalenie (zwiększenie pola widzenia)
+\end{itemize}
+
+\subsection{Parametry czułości}
+
+W systemie zaimplementowano następujące parametry czułości:
+
+\begin{itemize}
+    \item \textbf{Czułość myszy w poziomie} - określa, jak szybko kamera obraca się w poziomie w odpowiedzi na ruch myszy (w stopniach na piksel)
+    \item \textbf{Czułość myszy w pionie} - określa, jak szybko kamera obraca się w pionie w odpowiedzi na ruch myszy (w stopniach na piksel)
+    \item \textbf{Czułość roll} - określa, jak szybko kamera obraca się wokół osi Z w odpowiedzi na naciśnięcie klawiszy Alt+strzałki (w stopniach na sekundę)
+    \item \textbf{Prędkość ruchu} - określa, jak szybko kamera przesuwa się w przestrzeni w odpowiedzi na naciśnięcie klawiszy WASD (w jednostkach na sekundę)
+    \item \textbf{Prędkość zoomu} - określa, jak szybko zmienia się pole widzenia kamery w odpowiedzi na naciśnięcie klawiszy +/- lub kółka myszy
 \end{itemize}
 
 \section{Literatura i Źródła}

@@ -5,7 +5,7 @@ class Camera:
   def __init__(self, width: float, height: float, fov: float, far: float, near: float):
     self.CameraMatrix = transformation.getDefaultMatrix()
     self.position = np.array([0.0, 0.0, 0.0])
-    self.rotation = np.array([0.0, 0.0, 0.0])
+    self.rotation = np.array([0.0, 0.0, 0.0])  # [pitch, yaw, roll] in degrees
     self.fov = fov
     self.width = width
     self.height = height
@@ -53,13 +53,13 @@ class Camera:
     self.updateCameraMatrix()
 
   def rotate(self, rotationVector: tuple[float, float, float]):
-    """Rotate camera by given angles in degrees"""
+    """Rotate camera by given angles in degrees (global space)"""
     self.rotation[0] += rotationVector[0]  # Pitch
     self.rotation[1] += rotationVector[1]  # Yaw
-    self.rotation[2] += rotationVector[2]  # Roll (usually not used)
+    self.rotation[2] += rotationVector[2]  # Roll
     
     # Clamp pitch rotation to avoid gimbal lock
-    self.rotation[0] = np.clip(self.rotation[0], -89.0, 89.0)
+    self.rotation[0] = np.clip(self.rotation[0], -179.0, 179.0)
     
     # Keep yaw in range [0, 360)
     self.rotation[1] = self.rotation[1] % 360.0
@@ -89,7 +89,7 @@ class Camera:
     self.rotation[2] = np.degrees(new_roll)
     
     # Clamp pitch rotation to avoid gimbal lock
-    self.rotation[0] = np.clip(self.rotation[0], -89.0, 89.0)
+    self.rotation[0] = np.clip(self.rotation[0], -179.0, 179.0)
     
     # Keep yaw in range [0, 360)
     self.rotation[1] = self.rotation[1] % 360.0
@@ -97,7 +97,11 @@ class Camera:
     self.updateCameraMatrix()
 
   def rotateLocalMatrix(self, rotationVector: tuple[float, float, float]):
-    """Rotate camera around its local axes using transformation matrices"""
+    """Rotate camera around its local axes using transformation matrices
+    
+    Args:
+        rotationVector: A tuple of (pitch, yaw, roll) in degrees
+    """
     # Convert rotation angles to radians
     dpitch = np.radians(rotationVector[0])
     dyaw = np.radians(rotationVector[1])
@@ -128,21 +132,21 @@ class Camera:
         [0, 0, 0, 1]
     ])
     
-    # Combine rotations in the correct order: roll -> pitch -> yaw
+    # Combine rotations in the correct order: yaw -> pitch -> roll
     # This order ensures that the rotations are applied around the local axes
-    combined_matrix = np.dot(yaw_matrix, np.dot(pitch_matrix, roll_matrix))
+    combined_matrix = np.dot(roll_matrix, np.dot(pitch_matrix, yaw_matrix))
     
     # Apply the rotation to the camera matrix
     self.CameraMatrix = np.dot(combined_matrix, self.CameraMatrix)
     
-    # Extract new rotation angles from the updated camera matrix
-    # This is a simplified approach and may not be accurate for all cases
-    self.rotation[0] = np.degrees(np.arcsin(-self.CameraMatrix[1, 2]))  # Pitch
-    self.rotation[1] = np.degrees(np.arctan2(self.CameraMatrix[0, 2], self.CameraMatrix[2, 2]))  # Yaw
-    self.rotation[2] = np.degrees(np.arctan2(self.CameraMatrix[1, 0], self.CameraMatrix[1, 1]))  # Roll
+    # Update rotation angles directly instead of extracting from matrix
+    # This prevents the "stuck" behavior
+    self.rotation[0] += rotationVector[0]  # Pitch in degrees
+    self.rotation[1] += rotationVector[1]  # Yaw in degrees
+    self.rotation[2] += rotationVector[2]  # Roll in degrees
     
     # Clamp pitch rotation to avoid gimbal lock
-    self.rotation[0] = np.clip(self.rotation[0], -89.0, 89.0)
+    self.rotation[0] = np.clip(self.rotation[0], -179.0, 179.0)
     
     # Keep yaw in range [0, 360)
     self.rotation[1] = self.rotation[1] % 360.0

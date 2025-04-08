@@ -65,8 +65,8 @@ def getRotationMatrix(angles: tuple[float, float, float]) -> list[float]:
     Ry = getYRotationMatrix(angleY)
     Rz = getZRotationMatrix(angleZ)
     
-    # Rotation order: Z -> Y -> X (standard Euler angles)
-    return Rx @ Ry @ Rz
+    # Rotation order: Y -> X -> Z (standard for camera)
+    return Rz @ Rx @ Ry
 
 def getViewMatrix(position: np.ndarray, rotation: np.ndarray) -> list[float]:
     """Creates a view matrix for camera at given position with rotation"""
@@ -76,8 +76,9 @@ def getViewMatrix(position: np.ndarray, rotation: np.ndarray) -> list[float]:
     Ry = getYRotationMatrix(-np.radians(rotation[1]))
     Rz = getZRotationMatrix(-np.radians(rotation[2]))
     
-    # Combine rotations in correct order (Y * X * Z for camera)
-    R = Ry @ Rx @ Rz
+    # Combine rotations in correct order (Z * X * Y for camera)
+    # This matches the order in rotateLocalMatrix
+    R = Rz @ Rx @ Ry
     
     # Create translation matrix (move world in opposite direction of camera)
     T = getTranslationMatrix((-position[0], -position[1], -position[2]))
