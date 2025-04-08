@@ -42,9 +42,9 @@ class Renderer:
     self.movement = np.array([0.0, 0.0, 0.0])
     
     # Mouse sensitivity (degrees per pixel)
-    self.mouseSensitivityX = 2  # Yaw sensitivity
-    self.mouseSensitivityY = 2  # Pitch sensitivity
-    self.rollSensitivity = 2  # Speed for Z-axis movement with middle mouse button
+    self.mouseSensitivityX = 10  # Yaw sensitivity
+    self.mouseSensitivityY = 10  # Pitch sensitivity
+    self.rollSensitivity = 10  # Speed for Z-axis movement with middle mouse button
     
     # Movement speed
     self.moveSpeed = 10.0  # Units per second
@@ -111,28 +111,93 @@ class Renderer:
         return True
         
     return False
+  
+  def handleArrowsAsCameraControls(self):
+    """Handle camera rotation with arrow keys"""
+    # Get pressed keys
+    keys = pygame.key.get_pressed()
+    
+    # Get delta time for smooth movement
+    dt = self.clock.get_time() / 1000.0  # Convert to seconds
+    
+    # Check if Alt key is pressed for Z-axis rotation (roll)
+    if keys[pygame.K_LALT] or keys[pygame.K_RALT]:
+        # Z-axis rotation (roll) with left/right arrows
+        if keys[pygame.K_LEFT]:
+            self.camera.rotateLocalMatrix((0, 0, self.rollSensitivity * dt))
+            return True
+        if keys[pygame.K_RIGHT]:
+            self.camera.rotateLocalMatrix((0, 0, -self.rollSensitivity * dt))
+            return True
+    else:
+        # Normal rotation (pitch and yaw)
+        if keys[pygame.K_UP]:
+            self.camera.rotateLocalMatrix((self.rotationSensitivity * dt, 0, 0))
+            return True
+        if keys[pygame.K_DOWN]:
+            self.camera.rotateLocalMatrix((-self.rotationSensitivity * dt, 0, 0))
+            return True
+        if keys[pygame.K_LEFT]:
+            self.camera.rotateLocalMatrix((0, -self.rotationSensitivity * dt, 0))
+            return True
+        if keys[pygame.K_RIGHT]:
+            self.camera.rotateLocalMatrix((0, self.rotationSensitivity * dt, 0))
+            return True
+    
+    return False
 
   def handleMouseLook(self):
     """Handle mouse looking and roll rotation with middle mouse button"""
-    # Get relative mouse movement
-    dx, dy = pygame.mouse.get_rel()
+    # Get current mouse position
+    current_x, current_y = pygame.mouse.get_pos()
     
-    if dx != 0 or dy != 0:
-        # Get delta time for smooth movement
-        dt = self.clock.get_time() / 1000.0  # Convert to seconds
+    # Check if middle mouse button is pressed for roll
+    if pygame.mouse.get_pressed()[1]:  # Middle button
+        # If this is the first click, store the initial position
+        if not hasattr(self, 'last_mouse_pos'):
+            self.last_mouse_pos = (current_x, current_y)
+            return False
+            
+        # Calculate movement relative to last position
+        dx = current_x - self.last_mouse_pos[0]
+        dy = current_y - self.last_mouse_pos[1]
         
-        # Check if middle mouse button is pressed
-        if pygame.mouse.get_pressed()[1]:  # Middle button
+        # Update last position
+        self.last_mouse_pos = (current_x, current_y)
+        
+        if dx != 0:
+            # Get delta time for smooth movement
+            dt = self.clock.get_time() / 1000.0  # Convert to seconds
             # Use horizontal mouse movement for Z rotation (roll)
             roll = dx * self.rollSensitivity * dt
-            self.camera.rotate((0, 0, -roll))  # Negative for natural roll direction
+            self.camera.rotateLocalMatrix((0, 0, -roll))  # Negative for natural roll direction
             return True
-        else:
+    # Check if left mouse button is pressed for pitch and yaw
+    elif pygame.mouse.get_pressed()[0]:  # Left button
+        # If this is the first click, store the initial position
+        if not hasattr(self, 'last_mouse_pos'):
+            self.last_mouse_pos = (current_x, current_y)
+            return False
+            
+        # Calculate movement relative to last position
+        dx = current_x - self.last_mouse_pos[0]
+        dy = current_y - self.last_mouse_pos[1]
+        
+        # Update last position
+        self.last_mouse_pos = (current_x, current_y)
+        
+        if dx != 0 or dy != 0:
+            # Get delta time for smooth movement
+            dt = self.clock.get_time() / 1000.0  # Convert to seconds
             # Normal camera rotation (pitch and yaw)
             yaw = dx * self.mouseSensitivityX * dt
             pitch = dy * self.mouseSensitivityY * dt
-            self.camera.rotate((-pitch, -yaw, 0))
+            self.camera.rotateLocalMatrix((-pitch, -yaw, 0))
             return True
+    else:
+        # Reset last position when no mouse button is pressed
+        if hasattr(self, 'last_mouse_pos'):
+            delattr(self, 'last_mouse_pos')
         
     return False
 
@@ -151,6 +216,16 @@ class Renderer:
         elif event.key == pygame.K_e:
           self.camera.stabilize()
           needsRecalculation = True
+        elif event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
+          # Zoom in (decrease FOV)
+          newFOV = self.camera.fov - self.zoomSpeed
+          self.camera.fov = np.clip(newFOV, self.minFOV, self.maxFOV)
+          needsRecalculation = True
+        elif event.key == pygame.K_MINUS:
+          # Zoom out (increase FOV)
+          newFOV = self.camera.fov + self.zoomSpeed
+          self.camera.fov = np.clip(newFOV, self.minFOV, self.maxFOV)
+          needsRecalculation = True
       elif event.type == pygame.MOUSEWHEEL:
         # Scroll up (positive y) = zoom in (decrease FOV)
         # Scroll down (negative y) = zoom out (increase FOV)
@@ -165,6 +240,10 @@ class Renderer:
     
     # Handle mouse looking
     if self.handleMouseLook():
+        needsRecalculation = True
+        
+    # Handle arrow key rotation
+    if self.handleArrowsAsCameraControls():
         needsRecalculation = True
     
     if needsRecalculation:
