@@ -124,15 +124,7 @@ class PainterRenderer:
             centerPosition=(0.0, 0.0, 5.0)
         )
         
-        # Add basic cuboid arrangement for testing
-        self.scene.addObject(standard_cuboid, (0, 0, 5), (0, 0, 0), (1, 1, 1))        # Center
-        self.scene.addObject(standard_cuboid, (2, 0, 5), (0, 0, 0), (0.5, 0.5, 0.5))  # Right
-        self.scene.addObject(standard_cuboid, (-2, 0, 5), (0, 0, 0), (0.5, 0.5, 0.5)) # Left
-        self.scene.addObject(standard_cuboid, (0, 2, 5), (0, 0, 0), (0.5, 0.5, 0.5))  # Top
-        self.scene.addObject(standard_cuboid, (0, -2, 5), (0, 0, 0), (0.5, 0.5, 0.5)) # Bottom
-        self.scene.addObject(standard_cuboid, (0, 0, 8), (0, 0, 0), (0.5, 0.5, 0.5))  # Further front
-        
-        # Add additional objects for complex testing
+      # Add additional objects for complex testing
         
         # Intersecting objects to test BSP splitting
         self.scene.addObject(large_cuboid, (3, 3, 7), (30, 45, 0), (0.7, 0.7, 0.7))   # Rotated large cuboid
@@ -144,16 +136,13 @@ class PainterRenderer:
         
         # Add prism
         self.scene.addObject(prism, (4, -2, 6), (0, 45, 0), (1, 1, 1))               # Prism with rotation
-        self.scene.addObject(prism, (4, -2, 8), (30, 60, 0), (0.8, 0.8, 0.8))        # Another prism behind
-        
+
         # Add cylinder
         self.scene.addObject(cylinder, (-3, 2, 6), (30, 0, 0), (1, 1, 1))            # Cylinder with rotation
-        self.scene.addObject(cylinder, (-3, 2, 8), (0, 30, 0), (0.8, 0.8, 0.8))      # Another cylinder behind
-        
+  
         # Add octahedron
         self.scene.addObject(octahedron, (3, 2, 6), (0, 45, 0), (1, 1, 1))           # Octahedron with rotation
-        self.scene.addObject(octahedron, (3, 2, 8), (45, 45, 0), (0.8, 0.8, 0.8))    # Another octahedron behind
-        
+ 
         # Complex arrangement with mixed shapes to test occlusion
         # Flat platform with objects on it
         self.scene.addObject(flat_cuboid, (0, -3, 10), (0, 0, 0), (1, 1, 1))         # Flat platform
