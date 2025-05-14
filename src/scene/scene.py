@@ -1,5 +1,14 @@
 from scene.Cuboid import Cuboid
+from scene.Pyramid import Pyramid
+from scene.Prism import Prism
+from scene.Cylinder import Cylinder
+from scene.Octahedron import Octahedron
 import transformation
+from typing import Union, Any
+
+# Define a type for all supported objects
+SceneObject = Union[Cuboid, Pyramid, Prism, Cylinder, Octahedron]
+
 class Scene:
   def __init__(self):
     self.objects = []
@@ -9,17 +18,35 @@ class Scene:
       (0, 4), (1, 5), (2, 6), (3, 7)
     ]
 
-  def addObject(self, object: Cuboid, position: tuple[float, float, float], rotation: tuple[float, float, float], scale: tuple[float, float, float]): 
+  def addObject(self, object: SceneObject, position: tuple[float, float, float], rotation: tuple[float, float, float], scale: tuple[float, float, float]): 
     modelMatrix = self.createModelMatrix(position, rotation, scale)
-    # Create a copy of the object to avoid modifying the original
-    objectCopy = Cuboid(object.sizes, object.centerPosition)
+    
+    # Create a copy of the object based on its type
+    objectCopy = self._createObjectCopy(object)
+    
+    # Apply transformation
     objectCopy.transformVertices(modelMatrix)
     self.objects.append(objectCopy)
 
-  def removeObject(self, object: Cuboid):
+  def _createObjectCopy(self, object: SceneObject) -> SceneObject:
+    """Create a copy of the object based on its type"""
+    if isinstance(object, Cuboid):
+      return Cuboid(object.sizes, object.centerPosition)
+    elif isinstance(object, Pyramid):
+      return Pyramid(object.base_size, object.height, object.centerPosition)
+    elif isinstance(object, Prism):
+      return Prism(object.side_length, object.height, object.centerPosition)
+    elif isinstance(object, Cylinder):
+      return Cylinder(object.radius, object.height, object.segments, object.centerPosition)
+    elif isinstance(object, Octahedron):
+      return Octahedron(object.size, object.centerPosition)
+    else:
+      raise TypeError(f"Unsupported object type: {type(object)}")
+
+  def removeObject(self, object: Any):
     self.objects.remove(object)
 
-  def getObjects(self) -> list[Cuboid]:
+  def getObjects(self) -> list:
     return self.objects
 
   def createModelMatrix(self, position: tuple[float, float, float], rotation: tuple[float, float, float], scale: tuple[float, float, float]) -> list[float]:
