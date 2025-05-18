@@ -5,7 +5,9 @@
 \usepackage{amsmath, amssymb}
 \usepackage{hyperref}
 \usepackage{geometry}
+\usepackage{graphicx}
 \geometry{a4paper, margin=1in}
+\usepackage{caption}
 
 \title{Sprawozdanie – Algorytm Malarski z BSP}
 \author{Adrian Rybaczuk 318483}
@@ -157,20 +159,20 @@ Zalecane ustawienie kamery:
     \item Kąt widzenia: 60 stopni
 \end{itemize}
 
-Oczekiwany wynik: Obiekty są rysowane w prawidłowej kolejności, z zachowaniem poprawnej widoczności. Piramida wewnątrz sześcianu powinna być widoczna przez otwór w sześcianie, a cylinder powinien być poprawnie renderowany względem sześcianu.
+Oczekiwany wynik: Obiekty są rysowane w prawidłowej kolejności, z zachowaniem poprawnej widoczności. Cylinder powinien być poprawnie renderowany względem sześcianu.
 
 \begin{figure}[h]
     \centering
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{test1_setup.png}
+        \includegraphics[width=\textwidth]{src/Zrzut ekranu 2025-05-18 154308.png}
         \caption{Scena testowa - widok z boku}
     \end{minipage}
     \hfill
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{test1_result.png}
-        \caption{Wynik renderowania}
+        \includegraphics[width=\textwidth]{src/Zrzut ekranu 2025-05-18 154324.png}
+        \caption{Scena przodem}
     \end{minipage}
 \end{figure}
 
@@ -201,13 +203,13 @@ Oczekiwany wynik: Płynna zmiana kolejności rysowania przy zachowaniu poprawno�
     \centering
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{test2_view1.png}
+        \includegraphics[width=\textwidth]{src/Zrzut ekranu 2025-05-18 150822.png}
         \caption{Widok 1 - kamera z przodu}
     \end{minipage}
     \hfill
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{test2_view2.png}
+        \includegraphics[width=\textwidth]{src/Zrzut ekranu 2025-05-18 150913.png}}
         \caption{Widok 2 - kamera z boku}
     \end{minipage}
 \end{figure}
@@ -241,21 +243,21 @@ Oczekiwany wynik: Poprawne rozdzielenie przecinających się obiektów i zachowa
     \centering
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{test3_setup.png}
+        \includegraphics[width=\textwidth]{src/Zrzut ekranu 2025-05-18 154729.png}
         \caption{Scena z przecinającymi się obiektami}
     \end{minipage}
     \hfill
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{test3_result.png}
-        \caption{Wynik renderowania z poprawną kolejnością}
+        \includegraphics[width=\textwidth]{src/Zrzut ekranu 2025-05-18 154751.png}
+        \caption{Po przejsciu w bok zmiana kolejnosci}
     \end{minipage}
 \end{figure}
 
 \subsection{Test 4: Wydajność przy złożonej scenie}
 Test sprawdzający wydajność algorytmu przy dużej liczbie obiektów:
 \begin{itemize}
-    \item Scena zawierająca 50+ obiektów
+    \item Scena zawierająca więcej obiektów
     \item Różne typy obiektów (sześciany, piramidy, cylindry)
     \item Obiekty umieszczone w różnych odległościach od kamery
 \end{itemize}
@@ -279,14 +281,14 @@ Oczekiwany wynik: Płynne renderowanie sceny z zachowaniem poprawności kolejno�
     \centering
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{test4_overview.png}
-        \caption{Widok ogólny złożonej sceny}
+        \includegraphics[width=\textwidth]{src/Zrzut ekranu 2025-05-18 153817.png}
+        \caption{Widok z przodu ogólny złożonej sceny}
     \end{minipage}
     \hfill
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{test4_detail.png}
-        \caption{Zbliżenie na szczegóły renderowania}
+        \includegraphics[width=\textwidth]{src/Zrzut ekranu 2025-05-18 154152.png}
+        \caption{Widok z góry renderwoania}
     \end{minipage}
 \end{figure}
 
