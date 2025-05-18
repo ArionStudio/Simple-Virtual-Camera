@@ -75,93 +75,132 @@ class PainterRenderer:
         self.calculateScene()
 
     def setupTestScene(self):
-        # Create primitive objects
-        standard_cuboid = Cuboid(
-            sizes=(1.0, 1.0, 1.0),
+        """Setup the test scene based on current test case"""
+        # Clear existing objects
+        self.scene = Scene()
+        
+        # Choose which test to run
+        self.setupTest1()  # Basic rendering order
+        # self.setupTest2()  # Camera movement
+        # self.setupTest3()  # Intersecting objects
+        # self.setupTest4()  # Complex scene
+
+    def setupTest1(self):
+        """Test 1: Basic rendering order with transparent cube, pyramid and cylinder"""
+        # Create a large transparent cube
+        transparent_cube = Cuboid(
+            sizes=(3.0, 3.0, 3.0),
             centerPosition=(0.0, 0.0, 5.0)
         )
         
-        large_cuboid = Cuboid(
-            sizes=(2.0, 2.0, 2.0),
-            centerPosition=(0.0, 0.0, 5.0)
-        )
-        
-        flat_cuboid = Cuboid(
-            sizes=(3.0, 0.2, 3.0),
-            centerPosition=(0.0, 0.0, 5.0)
-        )
-        
-        tall_cuboid = Cuboid(
-            sizes=(0.5, 3.0, 0.5),
-            centerPosition=(0.0, 0.0, 5.0)
-        )
-        
-        # Create pyramid
+        # Create a pyramid inside the cube
         pyramid = Pyramid(
             base_size=1.2,
             height=1.5,
             centerPosition=(0.0, 0.0, 5.0)
         )
         
-        # Create prism
-        prism = Prism(
-            side_length=1.0,
+        # Create a cylinder intersecting the cube
+        cylinder = Cylinder(
+            radius=0.8,
+            height=2.0,
+            segments=12,
+            centerPosition=(1.5, 0.0, 5.0)
+        )
+        
+        # Add objects to scene
+        self.scene.addObject(transparent_cube, (0, 0, 5), (0, 0, 0), (0.7, 0.7, 0.7))
+        self.scene.addObject(pyramid, (0, 0, 5), (0, 0, 0), (1, 1, 1))
+        self.scene.addObject(cylinder, (1.5, 0, 5), (0, 45, 0), (1, 1, 1))
+
+    def setupTest2(self):
+        """Test 2: Scene for testing camera movement"""
+        # Create a complex arrangement of objects
+        # Main platform
+        platform = Cuboid(
+            sizes=(5.0, 0.2, 5.0),
+            centerPosition=(0.0, -2.0, 5.0)
+        )
+        
+        # Objects on platform
+        pyramid1 = Pyramid(
+            base_size=1.0,
             height=1.5,
+            centerPosition=(-2.0, -1.0, 5.0)
+        )
+        
+        cylinder1 = Cylinder(
+            radius=0.5,
+            height=1.0,
+            segments=12,
+            centerPosition=(2.0, -1.0, 5.0)
+        )
+        
+        # Add objects to scene
+        self.scene.addObject(platform, (0, -2, 5), (0, 0, 0), (0.8, 0.8, 0.8))
+        self.scene.addObject(pyramid1, (-2, -1, 5), (0, 30, 0), (1, 1, 1))
+        self.scene.addObject(cylinder1, (2, -1, 5), (0, 0, 0), (1, 1, 1))
+
+    def setupTest3(self):
+        """Test 3: Intersecting objects test"""
+        # Create two intersecting cubes
+        cube1 = Cuboid(
+            sizes=(2.0, 2.0, 2.0),
             centerPosition=(0.0, 0.0, 5.0)
         )
         
-        # Create cylinder
+        cube2 = Cuboid(
+            sizes=(2.0, 2.0, 2.0),
+            centerPosition=(1.0, 0.0, 5.0)
+        )
+        
+        # Create intersecting pyramid and cylinder
+        pyramid = Pyramid(
+            base_size=1.5,
+            height=2.0,
+            centerPosition=(0.0, 0.0, 5.0)
+        )
+        
         cylinder = Cylinder(
             radius=0.8,
-            height=1.6,
+            height=2.0,
             segments=12,
             centerPosition=(0.0, 0.0, 5.0)
         )
         
-        # Create octahedron
-        octahedron = Octahedron(
-            size=0.8,
-            centerPosition=(0.0, 0.0, 5.0)
-        )
-        
-      # Add additional objects for complex testing
-        
-        # Intersecting objects to test BSP splitting
-        self.scene.addObject(large_cuboid, (3, 3, 7), (30, 45, 0), (0.7, 0.7, 0.7))   # Rotated large cuboid
-        self.scene.addObject(standard_cuboid, (3, 3, 6), (0, 0, 0), (1, 1, 1))        # Intersecting with the above
-        
-        # Add pyramid
-        self.scene.addObject(pyramid, (-4, -2, 6), (0, 30, 0), (1, 1, 1))            # Pyramid with rotation
-        self.scene.addObject(pyramid, (-4, -2, 8), (45, 0, 0), (0.8, 0.8, 0.8))      # Another pyramid behind
-        
-        # Add prism
-        self.scene.addObject(prism, (4, -2, 6), (0, 45, 0), (1, 1, 1))               # Prism with rotation
+        # Add objects to scene
+        self.scene.addObject(cube1, (0, 0, 5), (0, 0, 0), (0.7, 0.7, 0.7))
+        self.scene.addObject(cube2, (1, 0, 5), (0, 45, 0), (0.8, 0.8, 0.8))
+        self.scene.addObject(pyramid, (0, 0, 5), (0, 30, 0), (1, 1, 1))
+        self.scene.addObject(cylinder, (0, 0, 5), (0, 0, 0), (1, 1, 1))
 
-        # Add cylinder
-        self.scene.addObject(cylinder, (-3, 2, 6), (30, 0, 0), (1, 1, 1))            # Cylinder with rotation
-  
-        # Add octahedron
-        self.scene.addObject(octahedron, (3, 2, 6), (0, 45, 0), (1, 1, 1))           # Octahedron with rotation
- 
-        # Complex arrangement with mixed shapes to test occlusion
-        # Flat platform with objects on it
-        self.scene.addObject(flat_cuboid, (0, -3, 10), (0, 0, 0), (1, 1, 1))         # Flat platform
-        self.scene.addObject(pyramid, (-1, -2, 10), (0, 30, 0), (0.7, 0.7, 0.7))     # Pyramid on platform
-        self.scene.addObject(prism, (1, -2, 10), (0, -30, 0), (0.7, 0.7, 0.7))       # Prism on platform
-        
-        # Column with objects nearby
-        self.scene.addObject(tall_cuboid, (-4, 0, 7), (0, 0, 0), (1, 1, 1))          # Tall column
-        self.scene.addObject(cylinder, (-4, 2, 7), (0, 0, 0), (0.6, 0.6, 0.6))       # Cylinder on top of column
-        self.scene.addObject(octahedron, (-5, 0, 7), (0, 0, 0), (0.6, 0.6, 0.6))     # Octahedron next to column
-        
-        # Additional complex arrangement
-        self.scene.addObject(pyramid, (5, 0, 12), (0, 30, 0), (0.8, 0.8, 0.8))       # Far right pyramid
-        self.scene.addObject(octahedron, (6, 0, 11), (45, 45, 0), (0.8, 0.8, 0.8))   # Far right octahedron
-        self.scene.addObject(prism, (7, 0, 10), (30, 0, 0), (0.8, 0.8, 0.8))         # Far right prism
-        
-        # Partially overlapping objects from camera view
-        self.scene.addObject(large_cuboid, (-6, 1, 9), (0, 15, 0), (0.9, 0.9, 0.9))  # Large cuboid
-        self.scene.addObject(cylinder, (-7, 1, 8), (0, 0, 0), (0.6, 0.6, 0.6))       # Cylinder partially behind
+    def setupTest4(self):
+        """Test 4: Complex scene with many objects"""
+        # Create a grid of objects
+        for x in range(-3, 4, 2):
+            for z in range(3, 8, 2):
+                # Add different types of objects
+                if (x + z) % 3 == 0:
+                    obj = Cuboid(
+                        sizes=(0.8, 0.8, 0.8),
+                        centerPosition=(x, 0.0, z)
+                    )
+                    self.scene.addObject(obj, (x, 0, z), (0, 0, 0), (0.7, 0.7, 0.7))
+                elif (x + z) % 3 == 1:
+                    obj = Pyramid(
+                        base_size=0.8,
+                        height=1.0,
+                        centerPosition=(x, 0.0, z)
+                    )
+                    self.scene.addObject(obj, (x, 0, z), (0, 30, 0), (0.8, 0.8, 0.8))
+                else:
+                    obj = Cylinder(
+                        radius=0.4,
+                        height=1.0,
+                        segments=8,
+                        centerPosition=(x, 0.0, z)
+                    )
+                    self.scene.addObject(obj, (x, 0, z), (0, 45, 0), (0.9, 0.9, 0.9))
 
     def calculateScene(self):
         """Calculate all scene transformations and projections"""

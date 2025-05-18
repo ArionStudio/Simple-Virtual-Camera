@@ -1,0 +1,312 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{Sprawozdanie – Algorytm Malarski z BSP}
+\author{Adrian Rybaczuk 318483}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Wstęp}
+
+Projekt polega na implementacji systemu wirtualnej kamery z wykorzystaniem algorytmu malarskiego (Painter's Algorithm) wspomaganego przez Binary Space Partitioning (BSP). Celem jest zapewnienie poprawnego renderowania sceny 3D z zachowaniem prawidłowej kolejności rysowania obiektów.
+
+\section{Algorytm Malarski z BSP}
+
+\subsection{Reprezentacja ściany w przestrzeni 3D}
+
+Każda ściana w scenie jest reprezentowana jako zbiór wierzchołków w przestrzeni jednorodnej:
+\[
+P_i = \begin{bmatrix} x_i \\ y_i \\ z_i \\ 1 \end{bmatrix}, \quad i \in \{1,2,\ldots,n\}
+\]
+
+Ściana jest zdefiniowana jako:
+\[
+F = \{P_1, P_2, \ldots, P_n\}
+\]
+
+\subsection{Plaszczyzna dzieląca w BSP}
+
+Dla każdej ściany definiujemy płaszczyznę dzielącą w postaci:
+\[
+ax + by + cz + d = 0
+\]
+
+gdzie wektor normalny płaszczyzny:
+\[
+\mathbf{n} = \begin{bmatrix} a \\ b \\ c \end{bmatrix}
+\]
+
+jest obliczany jako iloczyn wektorowy dwóch krawędzi ściany:
+\[
+\mathbf{n} = (P_2 - P_1) \times (P_3 - P_1)
+\]
+
+\subsection{Podział przestrzeni}
+
+Dla każdej ściany \(F\) i punktu \(P\) w przestrzeni, możemy określić jego położenie względem płaszczyzny dzielącej:
+
+\[
+\text{Pozycja}(P) = \begin{cases}
+\text{Przed} & \text{gdy } \mathbf{n} \cdot (P - P_1) > 0 \\
+\text{Za} & \text{gdy } \mathbf{n} \cdot (P - P_1) < 0 \\
+\text{Na} & \text{gdy } \mathbf{n} \cdot (P - P_1) = 0
+\end{cases}
+\]
+
+\subsection{Struktura drzewa BSP}
+
+Drzewo BSP jest strukturą binarną, gdzie każdy węzeł zawiera:
+\begin{itemize}
+    \item Ścianę dzielącą
+    \item Poddrzewo przed ścianą
+    \item Poddrzewo za ścianą
+\end{itemize}
+
+Formalnie, drzewo BSP \(T\) jest zdefiniowane jako:
+\[
+T = \begin{cases}
+\emptyset & \text{dla pustego drzewa} \\
+(F, T_{przed}, T_{za}) & \text{dla węzła z ścianą } F
+\end{cases}
+\]
+
+\subsection{Algorytm budowania drzewa BSP}
+
+Dla zbioru ścian \(S = \{F_1, F_2, \ldots, F_n\}\), drzewo BSP jest budowane rekurencyjnie:
+
+\begin{enumerate}
+    \item Wybierz ścianę \(F_i\) jako ścianę dzielącą
+    \item Podziel pozostałe ściany na zbiory:
+    \[
+    S_{przed} = \{F_j | F_j \text{ jest przed } F_i\}
+    \]
+    \[
+    S_{za} = \{F_j | F_j \text{ jest za } F_i\}
+    \]
+    \[
+    S_{na} = \{F_j | F_j \text{ jest na } F_i\}
+    \]
+    \item Rekurencyjnie zbuduj poddrzewa dla \(S_{przed}\) i \(S_{za}\)
+\end{enumerate}
+
+\subsection{Algorytm malarski z BSP}
+
+Kolejność rysowania jest określona przez przejście drzewa BSP w porządku in-order, z uwzględnieniem pozycji kamery:
+
+\[
+\text{Rysuj}(T, P_{camera}) = \begin{cases}
+\emptyset & \text{dla pustego drzewa} \\
+\text{Rysuj}(T_{za}, P_{camera}) \cup \{F\} \cup \text{Rysuj}(T_{przed}, P_{camera}) & \text{gdy } P_{camera} \text{ jest przed } F \\
+\text{Rysuj}(T_{przed}, P_{camera}) \cup \{F\} \cup \text{Rysuj}(T_{za}, P_{camera}) & \text{gdy } P_{camera} \text{ jest za } F
+\end{cases}
+\]
+
+\section{Optymalizacje}
+
+\subsection{Przyspieszenie obliczeń}
+
+Dla przyspieszenia obliczeń, wykorzystujemy:
+\begin{itemize}
+    \item Normalizację wektorów normalnych
+    \item Cachowanie wyników testów położenia
+    \item Wczesne odrzucanie ścian za kamerą
+\end{itemize}
+
+\subsection{Stabilizacja numeryczna}
+
+Aby zapewnić stabilność numeryczną, wprowadzamy epsilon \(\epsilon\):
+\[
+\text{Pozycja}(P) = \begin{cases}
+\text{Przed} & \text{gdy } \mathbf{n} \cdot (P - P_1) > \epsilon \\
+\text{Za} & \text{gdy } \mathbf{n} \cdot (P - P_1) < -\epsilon \\
+\text{Na} & \text{gdy } |\mathbf{n} \cdot (P - P_1)| \leq \epsilon
+\end{cases}
+\]
+
+\section{Testy}
+
+\subsection{Test 1: Poprawność kolejności rysowania}
+Test sprawdzający poprawność algorytmu BSP w przypadku złożonej sceny z wieloma obiektami. Scena zawiera:
+\begin{itemize}
+    \item Duży sześcian
+    \item Piramidę umieszczoną wewnątrz sześcianu
+    \item Cylinder przecinający sześcian
+\end{itemize}
+
+Kolejność obiektów na scenie (od najbliższego do najdalszego):
+\begin{enumerate}
+    \item Cylinder (przecina sześcian, część jest przed nim)
+    \item Sześcian (duży, zawiera piramidę)
+    \item Piramida (umieszczona wewnątrz sześcianu)
+\end{enumerate}
+
+Zalecane ustawienie kamery:
+\begin{itemize}
+    \item Pozycja: (5, 0, 5) - widok z boku
+    \item Kierunek: (-1, 0, 0) - patrząc na scenę z boku
+    \item Kąt widzenia: 60 stopni
+\end{itemize}
+
+Oczekiwany wynik: Obiekty są rysowane w prawidłowej kolejności, z zachowaniem poprawnej widoczności. Piramida wewnątrz sześcianu powinna być widoczna przez otwór w sześcianie, a cylinder powinien być poprawnie renderowany względem sześcianu.
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{test1_setup.png}
+        \caption{Scena testowa - widok z boku}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{test1_result.png}
+        \caption{Wynik renderowania}
+    \end{minipage}
+\end{figure}
+
+\subsection{Test 2: Zachowanie przy zmianie pozycji kamery}
+Test sprawdzający zachowanie algorytmu przy dynamicznej zmianie pozycji kamery:
+\begin{itemize}
+    \item Kamera porusza się wokół złożonej sceny
+    \item Sprawdzenie poprawności kolejności rysowania z różnych perspektyw
+    \item Weryfikacja płynności przejść między różnymi widokami
+\end{itemize}
+
+Kolejność obiektów na scenie:
+\begin{enumerate}
+    \item Cylinder (na platformie, z prawej strony)
+    \item Platforma (pod wszystkimi obiektami)
+    \item Piramida (na platformie, z lewej strony)
+\end{enumerate}
+
+Zalecane pozycje kamery:
+\begin{enumerate}
+    \item Widok 1: (0, 0, 10) - widok z przodu
+    \item Widok 2: (5, 0, 5) - widok z boku
+\end{enumerate}
+
+Oczekiwany wynik: Płynna zmiana kolejności rysowania przy zachowaniu poprawności widoczności.
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{test2_view1.png}
+        \caption{Widok 1 - kamera z przodu}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{test2_view2.png}
+        \caption{Widok 2 - kamera z boku}
+    \end{minipage}
+\end{figure}
+
+\subsection{Test 3: Obsługa przecinających się obiektów}
+Test sprawdzający zachowanie algorytmu w przypadku przecinających się obiektów:
+\begin{itemize}
+    \item Dwa sześciany przecinające się pod kątem 45 stopni
+    \item Piramida przecinająca cylinder
+    \item Złożony obiekt z wieloma przecinającymi się ścianami
+\end{itemize}
+
+Kolejność obiektów na scenie:
+\begin{enumerate}
+    \item Pierwszy sześcian (przecina się z drugim)
+    \item Drugi sześcian (przecina się z pierwszym)
+    \item Piramida (przecina cylinder)
+    \item Cylinder (przecinany przez piramidę)
+\end{enumerate}
+
+Zalecane ustawienie kamery:
+\begin{itemize}
+    \item Pozycja: (3, 3, 3) - widok ukośny
+    \item Kierunek: (-1, -1, -1) - patrząc na przecinające się obiekty
+    \item Kąt widzenia: 60 stopni
+\end{itemize}
+
+Oczekiwany wynik: Poprawne rozdzielenie przecinających się obiektów i zachowanie prawidłowej kolejności rysowania.
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{test3_setup.png}
+        \caption{Scena z przecinającymi się obiektami}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{test3_result.png}
+        \caption{Wynik renderowania z poprawną kolejnością}
+    \end{minipage}
+\end{figure}
+
+\subsection{Test 4: Wydajność przy złożonej scenie}
+Test sprawdzający wydajność algorytmu przy dużej liczbie obiektów:
+\begin{itemize}
+    \item Scena zawierająca 50+ obiektów
+    \item Różne typy obiektów (sześciany, piramidy, cylindry)
+    \item Obiekty umieszczone w różnych odległościach od kamery
+\end{itemize}
+
+Układ obiektów na scenie:
+\begin{enumerate}
+    \item Pierwszy rząd: sześciany (z = 3)
+    \item Drugi rząd: piramidy (z = 5)
+    \item Trzeci rząd: cylindry (z = 7)
+\end{enumerate}
+
+Zalecane ustawienia kamery:
+\begin{enumerate}
+    \item Widok ogólny: (0, 0, 15) - widok z góry
+    \item Widok szczegółowy: (2, 2, 5) - widok z bliska
+\end{enumerate}
+
+Oczekiwany wynik: Płynne renderowanie sceny z zachowaniem poprawności kolejności rysowania.
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{test4_overview.png}
+        \caption{Widok ogólny złożonej sceny}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{test4_detail.png}
+        \caption{Zbliżenie na szczegóły renderowania}
+    \end{minipage}
+\end{figure}
+
+\section{Podsumowanie}
+
+Implementacja algorytmu malarskiego z BSP zapewnia:
+\begin{itemize}
+    \item Poprawną kolejność rysowania obiektów
+    \item Efektywne zarządzanie złożonymi scenami
+    \item Stabilność numeryczną
+    \item Możliwość optymalizacji wydajności
+\end{itemize}
+
+\section{Literatura}
+\begin{enumerate}
+    \item Foley, J. D., van Dam, A., Feiner, S. K., \& Hughes, J. F. (1990). \textit{Computer Graphics: Principles and Practice} (2nd ed.). Addison-Wesley.
+    \item BSP Tree FAQ. \url{http://www.faqs.org/faqs/graphics/bsptree-faq/}
+    \item Binary Space Partitioning. \url{https://en.wikipedia.org/wiki/Binary_space_partitioning}
+    \item Tutorials Point. Binary Space Partitioning Trees in Computer Graphics. \url{https://www.tutorialspoint.com/computer_graphics/computer_graphics_binary_space_partitioning.htm}
+    \item Kiciak, P. (2010). Grafika komputerowa I. Uniwersytet Warszawski. \url{https://mst.mimuw.edu.pl/lecture.php?lecture=gk1&part=Ch9}
+\end{enumerate}
+
+\end{document} 
